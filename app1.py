@@ -46,7 +46,7 @@ retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-pro", 
-    temperature=0, 
+    temperature=0.7, 
     max_tokens=None, 
     timeout=None
 )
