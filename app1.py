@@ -62,6 +62,7 @@ system_prompt = (
     "   - If the chapter name or topic is not explicitly mentioned in the context, respond with 'Out of syllabus'.\n\n"
     "3. **Output Format:**\n"
     "   - Provide the output in JSON format.\n"
+    "make new question in same session"
     "   - Each question and its options should be distinct properties within the JSON structure.\n\n"
     "Input Context:\n"
     "{context}"
