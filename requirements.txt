@@ -36,3 +36,4 @@ langchain_chroma
 langchainhub
 pypdf
 rapidocr-onnxruntime
+flask-cors
