@@ -37,3 +37,4 @@ langchainhub
 pypdf
 rapidocr-onnxruntime
 flask-cors
+PyPDF2
