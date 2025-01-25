@@ -1,3 +1,19 @@
+fastapi==0.95.0
+uvicorn==0.22.0
+pydantic==1.10.7
+langchain==0.15.0
+langchain-community==0.2.1
+langchain-google-genai==0.1.0
+langchain-chroma==0.1.2
+python-dotenv==1.0.0
+rapidocr-onnxruntime==1.0.0
+langchain_experimental==0.1.0
+sentence-transformers==2.2.0
+langchainhub==0.0.3
+pypdf==3.8.0
+flask-cors==3.1.1
+PyPDF2==2.10.0
+
 # Flask
 # gunicorn
 # langchain
@@ -17,24 +33,5 @@
 # langchainhub
 # pypdf
 # rapidocr-onnxruntime
-Flask
-gunicorn
-langchain
-langchain-community
-langchain-google-genai
-langchain-chroma
-python-dotenv
-rapidocr-onnxruntime
-langchain
-langchain_community
-langchain-google-genai
-python-dotenv
-streamlit
-langchain_experimental
-sentence-transformers
-langchain_chroma
-langchainhub
-pypdf
-rapidocr-onnxruntime
-flask-cors
-PyPDF2
+# flask-cors
+# PyPDF2
