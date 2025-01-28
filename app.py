@@ -31,7 +31,7 @@ app.add_middleware(
 )
 
 # Load and process all PDF files in "ncert pdfs" folder
-pdf_folder = "ncert pdfs"
+pdf_folder = "ncertpdfs"
 pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
 
 documents = []
