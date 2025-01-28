@@ -12,3 +12,4 @@ sentence-transformers
 langchainhub
 pypdf
 flask-cors
+langserve
