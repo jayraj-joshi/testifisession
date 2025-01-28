@@ -92,7 +92,7 @@ rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 @app.get("/generate_questions")
 async def generate_questions(topic: str = Query(..., description="The topic for which you want to generate questions")):
     # Search documents based on the topic
-    search_results = retriever.retrieve(topic)
+    search_results = retriever.get_relevant_documents(topic)
     
     if not search_results:
         return {"message": "No relevant documents found for the specified topic."}
