@@ -13,3 +13,4 @@ langchainhub
 pypdf
 flask-cors
 langserve
+sse-starlette
