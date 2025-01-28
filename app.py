@@ -98,7 +98,7 @@ async def generate_questions(topic: str = Query(..., description="The topic for 
         return {"message": "No relevant documents found for the specified topic."}
     
     # Generate questions based on the found context
-    questions = rag_chain.run(topic=topic)
+    questions = rag_chain.invoke({"topic": topic})
     
     return {"questions": questions}
 
