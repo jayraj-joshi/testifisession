@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -8,7 +8,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langserve import add_routes
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,7 +31,7 @@ app.add_middleware(
 )
 
 # Load and process all PDF files in "ncert pdfs" folder
-pdf_folder = "ncertpdfs"
+pdf_folder = "ncert pdfs"
 pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
 
 documents = []
@@ -90,16 +89,20 @@ question_answer_chain = create_stuff_documents_chain(llm, prompt_template)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
 # Add routes with LangServe
-add_routes(
-    app,
-    rag_chain,
-    path="/generate_questions"
-)
+@app.get("/generate_questions")
+async def generate_questions(topic: str = Query(..., description="The topic for which you want to generate questions")):
+    # Search documents based on the topic
+    search_results = retriever.retrieve(topic)
+    
+    if not search_results:
+        return {"message": "No relevant documents found for the specified topic."}
+    
+    # Generate questions based on the found context
+    questions = rag_chain.run(topic=topic)
+    
+    return {"questions": questions}
 
-# Render.com entry point
 # Render.com entry point
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8000))  # Use PORT env variable or default to 8000
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
+    uvicorn.run(app, host="0.0.0.0", port=8000)
