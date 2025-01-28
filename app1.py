@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import os
+from fastapi import FastAPI
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -8,60 +8,61 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langserve import add_routes
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
 # Load environment variables
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI()
+app = FastAPI(
+    title="LangChain RAG API",
+    version="1.0",
+    description="A FastAPI application with RAG and LangChain integration."
+)
 
-# CORS configuration to allow all origins
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],  # Replace "*" with specific domains if needed
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
 
-# Define input schema
-class QueryRequest(BaseModel):
-    query: str
+# Load and process all PDF files in "ncert pdfs" folder
+pdf_folder = "ncert pdfs"
+pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
 
-# Load and process PDF data from the "ncertpdfs" folder
-pdf_folder = "ncertpdfs"
-all_docs = []
+documents = []
+for pdf_file in pdf_files:
+    loader = PyPDFLoader(os.path.join(pdf_folder, pdf_file))
+    data = loader.load()
+    documents.extend(data)
 
-if os.path.exists(pdf_folder):
-    for pdf_file in os.listdir(pdf_folder):
-        if pdf_file.endswith(".pdf"):
-            pdf_path = os.path.join(pdf_folder, pdf_file)
-            loader = PyPDFLoader(pdf_path)
-            data = loader.load()
+# Split documents into chunks
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
+docs = text_splitter.split_documents(documents)
 
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
-            docs = text_splitter.split_documents(data)
-            all_docs.extend(docs)
-else:
-    raise HTTPException(status_code=404, detail=f"Folder '{pdf_folder}' not found.")
-
+# Create vectorstore
 vectorstore = Chroma.from_documents(
-    documents=all_docs, 
+    documents=docs,
     embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 )
 
+# Initialize retriever
 retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
 
+# Initialize LLM (Gemini 1.5 Pro)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro", 
-    temperature=0, 
-    max_tokens=None, 
+    model="gemini-1.5-pro",
+    temperature=0,
+    max_tokens=None,
     timeout=None
 )
 
+# Define prompt and chain
 system_prompt = (
     "You are an assistant specialized in creating multiple-choice questions (MCQs). "
     "Using the provided context, follow these instructions to generate questions:\n\n"
@@ -85,20 +86,20 @@ prompt_template = ChatPromptTemplate.from_messages(
     ]
 )
 
-# API endpoint
-@app.post("/generate_questions")
-def generate_questions(request: QueryRequest):
-    query = request.query
-    if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
-    
-    question_answer_chain = create_stuff_documents_chain(llm, prompt_template)
-    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+question_answer_chain = create_stuff_documents_chain(llm, prompt_template)
+rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-    response = rag_chain.invoke({"input": query})
-    return {"questions": response["answer"]}
+# Add routes with LangServe
+add_routes(
+    app,
+    rag_chain,
+    path="/generate_questions"
+)
 
+# Render.com entry point
+# Render.com entry point
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # Default to port 8000 if PORT is not set
+    port = int(os.getenv("PORT", 8000))  # Use PORT env variable or default to 8000
     uvicorn.run(app, host="0.0.0.0", port=port)
+
