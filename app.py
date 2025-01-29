@@ -98,8 +98,9 @@ async def generate_questions(topic: str = Query(..., description="The topic for 
         return {"message": "No relevant documents found for the specified topic."}
     
     # Generate questions based on the found context
-    questions = rag_chain.invoke({"topic": topic})
-    
+    # questions = rag_chain.invoke({"topic": topic})
+    questions = rag_chain.invoke({"input": topic})
+
     return {"questions": questions}
 
 # Render.com entry point
